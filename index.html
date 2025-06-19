@@ -48,7 +48,9 @@
           (filters.length === 0 || filters.some(f => link.toLowerCase().includes(f)))
         );
 
-        const ampLinks = filtered.map(link => link.replace(/\.s?html$/, "_amp.shtml"));
+        const ampLinks = [...new Set(
+          filtered.map(link => link.replace(/\.s?html$/, "_amp.shtml"))
+        )];
 
         output.innerHTML = ampLinks.length
           ? ampLinks.map(link => `<a href="${link}" target="_blank">${link}</a>`).join("")
