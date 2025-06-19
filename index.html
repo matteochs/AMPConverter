@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Estrattore AMP per Corriere & Gazzetta</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    input, button { margin: 0.5em 0; padding: 0.5em; width: 100%; }
+    #results { margin-top: 1em; white-space: pre-wrap; background: #f2f2f2; padding: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Estrattore AMP per Corriere & Gazzetta</h1>
+  <label>URL della sezione</label>
+  <input type="text" id="sectionUrl" placeholder="https://www.corriere.it/...">
+  
+  <h3>Parole chiave per filtrare (OR)</h3>
+  <div id="filters"></div>
+  <input type="text" id="keywordInput" placeholder="es. sanremo">
+  <button onclick="addKeyword()">+ Aggiungi parola chiave</button>
+  
+  <button onclick="extractLinks()">Estrai link AMP</button>
+  <button onclick="copyToClipboard()">Copia negli appunti</button>
+
+  <h3>Link AMP trovati</h3>
+  <div id="results">...</div>
+
+  <script>
+    let keywords = [];
+    function addKeyword() {
+      const input = document.getElementById("keywordInput");
+      if (input.value.trim()) {
+        keywords.push(input.value.trim().toLowerCase());
+        input.value = "";
+        renderKeywords();
+      }
+    }
+
+    function renderKeywords() {
+      const div = document.getElementById("filters");
+      div.innerHTML = keywords.map(k => `<span>${k}</span>`).join(", ");
+    }
+
+    async function extractLinks() {
+      const url = document.getElementById("sectionUrl").value;
+      const output = document.getElementById("results");
+      output.textContent = "Caricamento...";
+
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const matches = [...text.matchAll(/https?:\/\/[\w\.\/\-%]+\.s?html/g)];
+        const links = matches.map(m => m[0]);
+
+        const filtered = links.filter(link =>
+          (link.includes("corriere.it") || link.includes("gazzetta.it")) &&
+          keywords.some(kw => link.toLowerCase().includes(kw))
+        );
+
+        const ampLinks = filtered.map(link =>
+          link.replace(/\.s?html$/, "_amp.shtml")
+        );
+
+        output.textContent = ampLinks.length ? ampLinks.join("\n") : "Nessun link trovato.";
+      } catch (e) {
+        output.textContent = "Errore: " + e.message;
+      }
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById("results").textContent;
+      navigator.clipboard.writeText(text).then(() => alert("Copiato!"));
+    }
+  </script>
+</body>
+</html>
