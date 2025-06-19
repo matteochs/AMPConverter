@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>AMP Extractor con parametri URL + filtro</title>
+  <title>AMP Extractor con filtro C+ G</title>
   <style>
     body { font-family: sans-serif; margin: 2em; max-width: 700px; }
     code { background: #eee; padding: 0.2em 0.4em; border-radius: 3px; }
@@ -11,7 +11,7 @@
 </head>
 <body>
   <h1>Link AMP generati</h1>
-  <p>Estrazione automatica da <code>?url=...</code> con filtro opzionale <code>&filter=...</code></p>
+  <p>Estrazione automatica da <code>?url=...</code> con filtro opzionale <code>&filter=parola1,parola2</code></p>
   <div id="results">In corso...</div>
 
   <script>
@@ -21,23 +21,25 @@
     }
 
     async function run() {
-      const targetUrl = getQueryParam("url");
-      const filtersRaw = getQueryParam("filter");
-      const filters = filtersRaw ? filtersRaw.toLowerCase().split(",") : [];
+      const url = getQueryParam("url");
+      const filterRaw = getQueryParam("filter");
+      const filters = filterRaw ? filterRaw.toLowerCase().split(",") : [];
+
       const output = document.getElementById("results");
 
-      if (!targetUrl) {
-        output.textContent = "Errore: manca il parametro ?url=...";
+      if (!url) {
+        output.textContent = "Errore: manca ?url=...";
         return;
       }
 
-      const proxy = "https://corsproxy.io/?" + encodeURIComponent(targetUrl);
+      const proxied = "https://corsproxy.io/?" + encodeURIComponent(url);
 
       try {
-        const res = await fetch(proxy);
-        const text = await res.text();
+        const response = await fetch(proxied);
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        const html = await response.text();
 
-        const matches = [...text.matchAll(/https?:\\/\\/[\\w\\.-]+\\/[\\w\\./-]*?\\.s?html/g)];
+        const matches = [...html.matchAll(/https?:\\/\\/[\\w\\.-]+\\/[\\w\\./-]*?\\.s?html/g)];
         const links = matches.map(m => m[0]);
 
         const filtered = links.filter(link =>
@@ -45,13 +47,11 @@
           (filters.length === 0 || filters.some(f => link.toLowerCase().includes(f)))
         );
 
-        const ampLinks = filtered.map(link =>
-          link.replace(/\\.s?html$/, "_amp.shtml")
-        );
+        const ampLinks = filtered.map(link => link.replace(/\\.s?html$/, "_amp.shtml"));
 
-        output.textContent = ampLinks.length ? ampLinks.join("\\n") : "Nessun link AMP trovato.";
-      } catch (e) {
-        output.textContent = "Errore: " + e.message;
+        output.textContent = ampLinks.length ? ampLinks.join("\\n") : "Nessun link trovato.";
+      } catch (err) {
+        output.textContent = "Errore durante il fetch: " + err.message;
       }
     }
 
