@@ -39,7 +39,7 @@
         if (!response.ok) throw new Error("HTTP " + response.status);
         const html = await response.text();
 
-        const matches = [...html.matchAll(/https?:\\/\\/[\\w\\.-]+\\/[\\w\\./-]*?\\.s?html/g)];
+        const matches = [...html.matchAll(/https?:\/\/[\w.-]+\/[\w\/\.-]*?\.s?html/g)];
         const links = matches.map(m => m[0]);
 
         const filtered = links.filter(link =>
