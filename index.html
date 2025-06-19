@@ -2,15 +2,16 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>AMP Extractor con filtro C+ G</title>
+  <title>AMP Extractor con filtro</title>
   <style>
     body { font-family: sans-serif; margin: 2em; max-width: 700px; }
     code { background: #eee; padding: 0.2em 0.4em; border-radius: 3px; }
-    #results { margin-top: 1em; white-space: pre-wrap; background: #f2f2f2; padding: 1em; }
+    #results { margin-top: 1em; background: #f2f2f2; padding: 1em; }
+    a { display: block; margin-bottom: 0.3em; color: #0066cc; }
   </style>
 </head>
 <body>
-  <h1>Link AMP generati 2</h1>
+  <h1>Link AMP generati</h1>
   <p>Estrazione automatica da <code>?url=...</code> con filtro opzionale <code>&filter=parola1,parola2</code></p>
   <div id="results">In corso...</div>
 
@@ -47,9 +48,11 @@
           (filters.length === 0 || filters.some(f => link.toLowerCase().includes(f)))
         );
 
-        const ampLinks = filtered.map(link => link.replace(/\\.s?html$/, "_amp.shtml"));
+        const ampLinks = filtered.map(link => link.replace(/\.s?html$/, "_amp.shtml"));
 
-        output.textContent = ampLinks.length ? ampLinks.join("\\n") : "Nessun link trovato.";
+        output.innerHTML = ampLinks.length
+          ? ampLinks.map(link => `<a href="${link}" target="_blank">${link}</a>`).join("")
+          : "Nessun link AMP trovato.";
       } catch (err) {
         output.textContent = "Errore durante il fetch: " + err.message;
       }
@@ -59,3 +62,4 @@
   </script>
 </body>
 </html>
+
